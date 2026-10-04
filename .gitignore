@@ -1,0 +1,19 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local health records and generated exports
+health-timeline-data/
+timeline.json
+timeline.xlsx
+*.xlsx
+backups/
+timeline.csv
+evidence/
+
+# Temporary extraction/rendering files
+*.tmp
+*.bak
+

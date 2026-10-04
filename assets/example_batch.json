@@ -1,0 +1,212 @@
+{
+  "run": {
+    "scope": "full conversation (no earlier checkpoint)",
+    "conversation_hint": "右膝疼痛 + 骨科门诊 + 化验单",
+    "last_message_anchor": "user: 好的，那我两周后去做 MRI",
+    "notes": ""
+  },
+  "subjects": [],
+  "sources": [
+    {
+      "temp_id": "S1",
+      "kind": "document",
+      "file_path": "assets/example_evidence.txt",
+      "filename": "example_evidence.txt",
+      "title": "Synthetic CBC + CRP example",
+      "pages": 1,
+      "document_date": "2026-09-28",
+      "issuer": "Synthetic example",
+      "origin": "bundled example"
+    }
+  ],
+  "events": [
+    {
+      "temp_id": "e1",
+      "subject_id": "self",
+      "event_date": "2026-09-21",
+      "date_precision": "day",
+      "date_note": "用户 2026-09-22 说'昨天开始'",
+      "event_type": "symptom",
+      "fact": "用户报告右膝疼痛约 6/10，上楼加重；用户认为与周末跑步扭伤有关",
+      "verbatim": "昨天开始右膝疼，大概6分，上楼更疼，我觉得是周末跑步扭到了",
+      "source_type": "patient_report",
+      "evidence": [
+        {
+          "kind": "chat",
+          "speaker": "user",
+          "quote": "昨天开始右膝疼，大概6分，上楼更疼",
+          "said_on": "2026-09-22"
+        }
+      ],
+      "analysis": [
+        {
+          "text": "疼痛原因未经医生评估",
+          "by": "recorder"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "temp_id": "e2",
+      "event_date": "2026-09-22",
+      "date_precision": "day",
+      "event_type": "ai_analysis",
+      "fact": null,
+      "source_type": "ai_statement",
+      "about": [
+        "e1"
+      ],
+      "evidence": [
+        {
+          "kind": "chat",
+          "speaker": "assistant",
+          "quote": "髌股疼痛综合征或髌腱炎都有可能，建议先减少跑量",
+          "said_on": "2026-09-22"
+        }
+      ],
+      "analysis": [
+        {
+          "text": "髌股疼痛综合征或髌腱炎都有可能；建议减少跑量，一周不缓解则骨科就诊",
+          "by": "ai_in_chat",
+          "basis": [
+            "e1"
+          ]
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "temp_id": "e3",
+      "event_date": "2026-09-28",
+      "date_precision": "day",
+      "event_type": "encounter",
+      "fact": "用户报告骨科门诊就诊",
+      "source_type": "patient_report",
+      "evidence": [
+        {
+          "kind": "chat",
+          "speaker": "user",
+          "quote": "今天看了骨科",
+          "said_on": "2026-09-28"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "temp_id": "e4",
+      "event_date": "2026-09-28",
+      "date_precision": "day",
+      "event_type": "diagnosis",
+      "fact": "医生（用户转述）：考虑半月板损伤",
+      "verbatim": "医生说考虑半月板损伤",
+      "source_type": "clinician_relayed",
+      "about": [
+        "e3"
+      ],
+      "evidence": [
+        {
+          "kind": "chat",
+          "speaker": "user",
+          "quote": "医生说考虑半月板损伤",
+          "said_on": "2026-09-28"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "temp_id": "e5",
+      "event_date": "2026-09-28",
+      "date_precision": "day",
+      "event_type": "medication",
+      "fact": "医生（用户转述）开具塞来昔布 200 mg 每日一次",
+      "source_type": "clinician_relayed",
+      "evidence": [
+        {
+          "kind": "chat",
+          "speaker": "user",
+          "quote": "开了塞来昔布 200mg 每天一次",
+          "said_on": "2026-09-28"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "temp_id": "e6",
+      "event_date": "2026-10-12",
+      "date_precision": "approximate",
+      "date_note": "'两周后'，自 2026-09-28 推算",
+      "event_type": "plan",
+      "fact": "医生（用户转述）：两周后行右膝 MRI",
+      "source_type": "clinician_relayed",
+      "evidence": [
+        {
+          "kind": "chat",
+          "speaker": "user",
+          "quote": "让我两周后做 MRI",
+          "said_on": "2026-09-28"
+        }
+      ],
+      "confidence": "medium",
+      "confidence_note": "具体日期为推算"
+    },
+    {
+      "temp_id": "e7",
+      "event_date": "2026-09-28",
+      "date_precision": "day",
+      "date_note": "采样时间 2026-09-28 08:12；报告时间 10:40",
+      "event_type": "lab_result",
+      "fact": "化验单：CRP 12.0 mg/L（参考 0–8，↑）",
+      "verbatim": "C反应蛋白(CRP)  12.0  ↑  mg/L  0-8",
+      "values": {
+        "name": "CRP",
+        "value": 12.0,
+        "unit": "mg/L",
+        "ref_range": "0-8",
+        "flag": "↑"
+      },
+      "panel": "血常规+CRP 2026-09-28",
+      "source_type": "lab_report",
+      "evidence": [
+        {
+          "kind": "file",
+          "source_id": "S1",
+          "locator": "line 3"
+        }
+      ],
+      "analysis": [
+        {
+          "text": "高于报告参考范围（0–8 mg/L）",
+          "by": "recorder"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "temp_id": "e8",
+      "event_date": "2026-09-28",
+      "date_precision": "day",
+      "date_note": "采样时间 2026-09-28 08:12",
+      "event_type": "lab_result",
+      "fact": "化验单：白细胞计数 WBC 7.9 ×10^9/L（参考 3.5–9.5）",
+      "verbatim": "白细胞计数(WBC)  7.9  10^9/L  3.5-9.5",
+      "values": {
+        "name": "WBC",
+        "value": 7.9,
+        "unit": "10^9/L",
+        "ref_range": "3.5-9.5",
+        "flag": ""
+      },
+      "panel": "血常规+CRP 2026-09-28",
+      "source_type": "lab_report",
+      "evidence": [
+        {
+          "kind": "file",
+          "source_id": "S1",
+          "locator": "line 4"
+        }
+      ],
+      "confidence": "high"
+    }
+  ],
+  "status_changes": []
+}

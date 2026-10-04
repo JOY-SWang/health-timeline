@@ -1,0 +1,4 @@
+SYNTHETIC EXAMPLE - NOT A REAL MEDICAL RECORD
+Document date: 2026-09-28
+CRP: 12.0 mg/L (reference 0-8), high
+WBC: 7.9 x10^9/L (reference 3.5-9.5)
