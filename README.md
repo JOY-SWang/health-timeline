@@ -17,6 +17,8 @@ Instead of flattening medical records and AI interpretations into one summary, t
 - Preserves history with append-only corrections, superseding, conflicts, and retractions.
 - Tracks multiple people with explicit subject IDs.
 - Exports a readable Excel timeline and lab-trend sheets.
+- Streams Apple Health ZIP/XML exports into source-separated daily summaries and selected original
+  measurements, with an input/member coverage report and a separate device-trend sheet.
 - Makes no network calls from its bundled Python scripts.
 
 ## What it is not
@@ -35,10 +37,12 @@ health-timeline/
 ├── scripts/
 │   ├── append_event.py
 │   ├── export_excel.py
-│   └── validate_record.py
+│   ├── validate_record.py
+│   └── import_apple_health.py
 ├── references/
 │   ├── schema.md
-│   └── extraction-rules.md
+│   ├── extraction-rules.md
+│   └── apple-health.md
 ├── assets/
 │   ├── example_batch.json
 │   └── icon.svg
@@ -140,6 +144,34 @@ Show how my CRP has changed over time.
 ```
 
 See [`examples/README.md`](examples/README.md) for expected behavior and correction/conflict examples.
+
+## Apple Health exports
+
+Preview an export without modifying the timeline:
+
+```bash
+python3 scripts/import_apple_health.py /path/to/export.zip \
+  --out /path/to/private-data/apple-health-import-01
+```
+
+For selected original measurements, add `--batch`, then validate and append its generated
+`apple-health-batch.json` through the existing scripts. Use `--since`, `--until`, `--types` and
+`--batch-types` to limit the selection; run `--help` for all options.
+Add `--xlsx` for a separate daily/sleep summary workbook without adding calculated values to the
+timeline's fact layer.
+
+Daily CSV/JSON statistics stay separate from source-measured timeline facts. Raw additive sums may
+include overlapping samples and differ from Apple's displayed totals. Sleep durations merge overlaps
+per source; the exporter does not combine different devices. CDA, GPX, ECG, workouts and unsupported
+categories are inventoried rather than silently treated as imported. No direct phone/portal access
+is added. See [`references/apple-health.md`](references/apple-health.md) for exact coverage and rules.
+
+The importer needs only Python's standard library. Excel export and its integration tests need the
+existing `openpyxl` dependency. Run the synthetic test suite with:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
 
 ## Data model and provenance
 

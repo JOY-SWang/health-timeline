@@ -38,7 +38,7 @@ from validate_record import (  # noqa: E402
 
 EVENT_KEY_ORDER = [
     "event_id", "subject_id", "event_date", "date_precision", "date_note", "event_type",
-    "fact", "verbatim", "values", "panel", "source_type", "source_label", "evidence",
+    "fact", "verbatim", "values", "measurement_id", "panel", "source_type", "source_label", "evidence",
     "analysis", "about", "status", "confidence", "confidence_note", "supersedes",
     "superseded_by", "correction_reason", "conflicts_with", "recorded_at", "run_id",
     "fingerprint", "allow_duplicate", "notes",
@@ -91,6 +91,8 @@ def fingerprint(ev):
         ev.get("subject_id", "self"), ev.get("event_date") or "", ev.get("event_type", ""),
         ev.get("source_type", ""), norm_text(body),
     ])
+    if ev.get("measurement_id"):
+        key += "|" + ev["measurement_id"]
     return "sha256:" + hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
 
 

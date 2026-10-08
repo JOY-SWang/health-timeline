@@ -41,6 +41,7 @@ Contents: 1. Data directory · 2. Database (`timeline.json`) · 3. Event fields 
 | `fact` | yes, except ai_analysis | one attributed, atomic statement of what the source asserted |
 | `verbatim` | recommended | the original wording / printed text, untranslated |
 | `values` | labs & vitals | `{"name","value","unit","ref_range","flag"}` exactly as printed; `value` is a number when the source gives a plain number, otherwise a string ("135/88", "阴性", "<0.5") |
+| `measurement_id` | optional, device only | `sha256:` plus 64 lowercase hex digits: an exact raw-measurement identity included in deduplication. Apple Health hashes type, source name, original value/unit and original start/end timestamps. Events without this field retain their existing fingerprints. |
 | `panel` | optional | groups atomic results from one test sheet, e.g. `"血常规+CRP 2026-10-03"` |
 | `source_type` | yes | who/what asserted the fact (see enums) |
 | `source_label` | auto-filled | human label for the Excel Source column; default from source_type; override for specificity ("Lab report (仁济医院)") |

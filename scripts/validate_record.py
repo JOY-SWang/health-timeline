@@ -309,6 +309,10 @@ def check_event(ev, where, rep, ctx, in_batch):
 
     # --- values (structured measurements)
     vals = ev.get("values")
+    measurement_id = ev.get("measurement_id")
+    if measurement_id is not None:
+        if st != "device_measurement" or not isinstance(measurement_id, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", measurement_id):
+            rep.err(where, "measurement_id requires device_measurement and a full sha256: digest")
     if vals is not None:
         if not isinstance(vals, dict):
             rep.err(where, "values must be an object {name, value, unit, ref_range?, flag?}")
