@@ -13,7 +13,17 @@ backups/
 timeline.csv
 evidence/
 
+# User-provided Apple Health exports and private derived views
+export.zip
+export.xml
+export_cda.xml
+apple_health_export/
+apple-health-summary.json
+apple-health-daily.csv
+apple-health-batch.json
+apple-health-summary.xlsx
+apple-health-data/
+
 # Temporary extraction/rendering files
 *.tmp
 *.bak
-

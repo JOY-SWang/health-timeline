@@ -1,6 +1,6 @@
 ---
 name: health-timeline
-description: Keep a personal health record from the conversation. Turns symptoms, doctor visits, what doctors said, lab results, imaging, medications and the AI's own comments - from chat text, photos, PDFs, 化验单, 检查报告, 病历, 处方 - into source-attributed events in a local JSON database, exported to Excel. Keeps facts strictly separate from AI analysis or inference, keeps a reference to the original evidence, and handles corrections and conflicting records without overwriting history. Use whenever the user wants health or medical information recorded, logged, archived, tracked, updated, corrected or exported - e.g. 记录一下, 更新时间线, 存进健康档案/病历, 把化验单整理进表格, add this to my health timeline, log today's visit, export my medical history to Excel - or uploads a medical report and wants it kept. Also use to look up or summarise what the timeline already holds. It is a recorder, not a diagnostician; do not use it for medical questions where nothing should be recorded.
+description: Use when the user wants to record, update, correct, export or summarise a personal health timeline from conversations, medical reports, images, PDFs, or Apple Health export.zip/export.xml. Keeps source-backed observations separate from AI analysis and handles large wearable exports through local daily summaries and selected original measurements. Triggers include 记录一下, 更新时间线, 把化验单整理进表格, import Apple Health, 导入健康数据. It records and organises; it does not diagnose or automatically access a phone or patient portal.
 ---
 
 # Health Timeline
@@ -9,6 +9,7 @@ Turn the medical content of a conversation into a clean, append-only health reco
 
 ```
 chat text / images / PDFs → atomic claims → validation → timeline.json (canonical) → timeline.xlsx (view)
+Apple Health ZIP / XML → streaming summary + selected original measurements → the same validation/append flow
 ```
 
 This skill records; it does not diagnose. You can still be a helpful assistant in the conversation,
@@ -39,6 +40,11 @@ errors compound silently.
   validates, backs up, writes atomically, then regenerates the Excel file.
 - `scripts/validate_record.py` — checks a batch (`--batch`) or the whole database (`--db`).
 - `scripts/export_excel.py` — re-exports the workbook (`--csv` if openpyxl is unavailable).
+- `scripts/import_apple_health.py` — streams Apple Health ZIP/XML into a coverage report, daily CSV,
+  an optional daily/sleep Excel workbook, and optionally a batch of selected original measurements.
+  No automatic database writes.
+- `references/apple-health.md` — read for Apple Health exports: recognition, source separation,
+  sleep/quantity statistics, date filters, coverage limits, and the import/append workflow.
 - `references/extraction-rules.md` — **read before your first extraction in a session**: atomicity,
   attribution wording, what may go in analysis, AI statements, dates, images, PDFs, corrections, examples.
 - `references/schema.md` — every field, enums, batch format, lifecycle rules. Read when writing a batch.
@@ -74,6 +80,10 @@ own output (summaries, checkpoint lines).
 
 ### 3. Read the inputs
 
+- For Apple Health `export.zip` or `export.xml`, read `references/apple-health.md` and use the streaming
+  importer. Inspect the ZIP member list to identify its actual format; a filename or preceding portal
+  link does not identify the export. Do not load a large XML into the conversation or turn every
+  high-frequency sample into a timeline event. Summary-only requests need no database creation.
 - Look at every image yourself. For PDFs extract text per page (`pdftotext -layout -f N -l N`, or
   pdfplumber) so you can cite pages; render scanned pages to images and read them.
 - Note the date each message was sent — relative dates ("昨天") resolve against it.
@@ -83,6 +93,9 @@ own output (summaries, checkpoint lines).
 Follow `references/extraction-rules.md`. The short version:
 
 - one checkable assertion per event (each lab analyte separately, grouped by `panel`);
+- Apple Health batches contain selected raw measurements, with original timestamps in their assertions
+  and ZIP member/Record locators. Daily calculated summaries stay in the summary files, outside the fact
+  layer. Review coverage and skipped types before appending; do not call a partial import complete.
 - `source_type` = who asserted it; keep the source's certainty ("考虑", "?") exactly;
 - copy values, units, ranges and flags exactly as printed;
 - `confidence` = how faithfully the record matches its source (not whether it is medically true);
@@ -99,9 +112,10 @@ retracted). Corrections keep the clinical date of what they correct. Never settl
 choosing a source yourself; record both and ask. Never edit an existing record's content or analysis —
 not even a note that a correction made stale (the export flags those automatically).
 
-Write the batch to a temporary file outside the data directory (shape: `assets/example_batch.json`;
-details: `references/schema.md` §7) and delete it, along with any rendered page images, once the append
-succeeds — the database already holds everything.
+Write manually extracted batches to a temporary file outside the data directory (shape:
+`assets/example_batch.json`; details: `references/schema.md` §7). Generated Apple Health batches can
+stay with their private import outputs. Delete batch files and rendered page images once append
+succeeds; retain Apple Health coverage reports and daily summaries, which are separate derived views.
 Fill `run.last_message_anchor` with a short quote of the last message you processed, prefixed by the
 speaker, e.g. `"user: 好的，那我下周去复查"`. For files that exist on disk (uploads), pass `file_path`
 so they are archived into `evidence/` with a hash.
@@ -149,7 +163,8 @@ Timeline sheet columns: `Date | Fact | Source | Analysis / Inference | Image / E
 AI rows are lavender; needs-review rows yellow; disputed rows orange; superseded/retracted rows grey and
 struck through. Date and Fact cells carry hover notes (date derivation, verbatim text); evidence cells
 link to the archived file. Further sheets: Lab trends (analyte × date), Evidence, Log (runs and status
-changes), Guide.
+changes), Guide. Device trends shows original device measurements by date, source, and unit; they are
+never relabelled as lab results. Large Apple Health daily summaries are a separate CSV/JSON view.
 
 ## Boundaries
 

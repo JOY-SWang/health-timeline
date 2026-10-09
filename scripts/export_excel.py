@@ -127,11 +127,12 @@ def timeline_rows(db, subject=None):
     return cols, rows
 
 
-def lab_matrix(db, subject=None):
-    """{(subject, name, unit): {date: [cell text]}} for live lab results."""
+def lab_matrix(db, subject=None, device=False):
+    """Live measurements by date; device mode also keeps sources separate."""
     out, ref = {}, {}
     for ev in sorted(db.get("events", []), key=sort_key):
-        if ev.get("event_type") != "lab_result" or ev.get("status") in INACTIVE:
+        eligible = ev.get("source_type") == "device_measurement" if device else ev.get("event_type") == "lab_result"
+        if not eligible or ev.get("status") in INACTIVE:
             continue
         if subject and ev.get("subject_id") != subject:
             continue
@@ -139,6 +140,8 @@ def lab_matrix(db, subject=None):
         if not v.get("name"):
             continue
         key = (ev.get("subject_id"), v["name"], v.get("unit") or "")
+        if device:
+            key += (ev.get("source_label") or DEFAULT_SOURCE_LABELS["device_measurement"],)
         txt = f"{v.get('value')}" + (f" {v['flag']}" if v.get("flag") else "")
         if ev.get("status") == "disputed":
             txt += " (disputed)"
@@ -230,23 +233,27 @@ def export_xlsx(db, out_path, subject=None):
     if rows:
         ws.auto_filter.ref = f"A1:{get_column_letter(len(cols))}{len(rows) + 1}"
 
-    # --- Lab trends
-    matrix, refs = lab_matrix(db, subject)
-    if matrix:
-        lt = wb.create_sheet("Lab trends")
+    # --- Lab and device trends; device observations are never labelled as lab results.
+    for title, device in (("Lab trends", False), ("Device trends", True)):
+        matrix, refs = lab_matrix(db, subject, device=device)
+        if not matrix:
+            continue
+        lt = wb.create_sheet(title)
         dates = sorted({d for by_date in matrix.values() for d in by_date}, key=lambda d: d.lstrip("≈"))
         names = {s["subject_id"]: s.get("display_name") or s["subject_id"] for s in db.get("subjects", [])}
         multi = len({k[0] for k in matrix}) > 1
-        lcols = (["Subject"] if multi else []) + ["Analyte", "Unit", "Ref range"] + dates
+        lcols = (["Subject"] if multi else []) + (["Measurement", "Unit", "Source"] if device else ["Analyte", "Unit", "Ref range"]) + dates
         header(lt, lcols)
         for r_i, key in enumerate(sorted(matrix, key=lambda k: (k[0], k[1].lower())), 2):
-            vals = ([names.get(key[0], key[0])] if multi else []) + [key[1], key[2], refs.get(key, "")]
+            vals = ([names.get(key[0], key[0])] if multi else []) + [key[1], key[2], key[3] if device else refs.get(key, "")]
             vals += ["; ".join(matrix[key].get(d, [])) for d in dates]
             for c_i, v in enumerate(vals, 1):
                 cell = lt.cell(row=r_i, column=c_i, value=v)
+                if device and isinstance(v, str):
+                    cell.data_type = "s"  # Source/type text from exports must not become formulas.
                 cell.alignment, cell.border = wrap, border
         for i, c in enumerate(lcols, 1):
-            lt.column_dimensions[get_column_letter(i)].width = 22 if c == "Analyte" else 13
+            lt.column_dimensions[get_column_letter(i)].width = 22 if c in ("Analyte", "Measurement", "Source") else 13
         lt.freeze_panes = lt.cell(row=2, column=len(lcols) - len(dates) + 1)
 
     # --- Evidence

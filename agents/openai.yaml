@@ -1,10 +1,10 @@
 interface:
   display_name: "Health Timeline"
-  short_description: "Record medical info from chat, photos and PDFs into a source-attributed JSON timeline with Excel export - facts kept apart from AI inference."
+  short_description: "Track reports and Apple Health with source-backed records."
   icon_small: "./assets/icon.svg"
   icon_large: "./assets/icon.svg"
   brand_color: "#2F4F6F"
-  default_prompt: "Update my health timeline with the new medical information from this conversation since the last checkpoint, then export the Excel file."
+  default_prompt: "Use $health-timeline to record the supplied medical information or Apple Health export with its sources, show daily wearable summaries, and export the Excel views."
 
 policy:
   allow_implicit_invocation: true
